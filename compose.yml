@@ -1,0 +1,16 @@
+services:
+  rabbitmq:
+    image: 'rabbitmq:latest'
+    environment:
+      - 'RABBITMQ_DEFAULT_PASS=secret'
+      - 'RABBITMQ_DEFAULT_USER=myuser'
+    ports:
+      - "5672"
+  postgres:
+    image: postgres:17-bullseye
+    ports:
+      - "5432"
+    environment:
+      - 'POSTGRES_DB=test'
+      - 'POSTGRES_USER=myuser'
+      - 'POSTGRES_PASSWORD=secret'

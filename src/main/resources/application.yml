@@ -1,0 +1,58 @@
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health, prometheus #
+  metrics:
+    tags:
+      application: "producer"
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/test
+    driver-class-name: postgres
+    username: myuser
+    password: secret
+  jpa:
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    hibernate:
+      ddl-auto: update
+      generate_statistics: true
+  rabbitmq:
+    template:
+      default-receive-queue: dummy
+    listener:
+      simple:
+        default-requeue-rejected: false
+        acknowledge-mode: manual
+  docker:
+    compose:
+      file: productor/compose.yml
+
+
+rabbitmq:
+  exchange: cryptocurrencies
+  currency-update-queue: currency-update
+  currency-update-routing-bind: "#.price.update"
+  subscription-queue: currency.subscription
+  subscription-routing-bind: "currency.subscription.#"
+  currency-error-update-queue: currency-update-error
+  currency-error-update-routing-bind: "#.error"
+  dead-letter-exchange: dead-letter-exchange
+  dead-letter-queue: dead-letter-queue
+
+binance:
+  url: "wss://fstream.binance.com/ws"
+  retry-max-attemps: 10
+  retry-interval: 500
+  retry-interval-multiplier: 2
+  observability:
+    web-socket-status-gauge: binance.websocket.status
+    web-socket-status-description: "WebSocket connection status (1=UP, 0=DOWN)"
+    web-socket-silence-gauge: binance.websocket.silence
+    web-socket-silence-description: "Time since last message (in seconds)"
+    web-socket-messages-processed-counter: binance.websocket.messages.processed
+    web-socket-messages-ignored-counter: binance.websocket.messages.ignored
+
+
+
+
