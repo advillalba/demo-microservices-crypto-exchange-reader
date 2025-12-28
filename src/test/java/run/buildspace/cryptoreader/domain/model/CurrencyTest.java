@@ -12,25 +12,25 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @Execution(ExecutionMode.CONCURRENT)
-class CurrencyTest {
+class PriceUpdateTest {
 
 
     @Test
     void currencyCreationTest() {
-        Currency currency = Mocks.currency();
-        assertEquals(Mocks.SYMBOL, currency.symbol());
-        assertEquals(Mocks.PRICE, currency.price());
+        PriceUpdate priceUpdate = Mocks.priceUpdate();
+        assertEquals(Mocks.SYMBOL, priceUpdate.symbol());
+        assertEquals(Mocks.PRICE, priceUpdate.price());
     }
 
     @Test
     void currencyCreationInvalidSymbolTest() {
-        InvalidSymbolException exception = assertThrows(InvalidSymbolException.class, Mocks::currencyWrongSymbol);
+        InvalidSymbolException exception = assertThrows(InvalidSymbolException.class, Mocks::wrongSymbolPriceUpdate);
         assertEquals("Symbol cannot be empty", exception.getMessage());
     }
 
     @Test
     void currencyCreationInvalidPriceTest() {
-        InvalidPriceException exception = assertThrows(InvalidPriceException.class, Mocks::currencyWrongPrice);
+        InvalidPriceException exception = assertThrows(InvalidPriceException.class, Mocks::wrongPriceUpdate);
         assertEquals("Price must be informed", exception.getMessage());
     }
 
@@ -40,23 +40,23 @@ class CurrencyTest {
         static final String SYMBOL = "BTC";
         static final BigDecimal PRICE = BigDecimal.valueOf(12345.67);
 
-        static Currency currency() {
-            return Currency.builder()
+        static PriceUpdate priceUpdate() {
+            return PriceUpdate.builder()
                     .symbol(SYMBOL)
                     .price(PRICE)
                     .timestamp(System.currentTimeMillis())
                     .build();
         }
 
-        static void currencyWrongSymbol() {
-            Currency.builder()
+        static void wrongSymbolPriceUpdate() {
+            PriceUpdate.builder()
                     .price(PRICE)
                     .timestamp(System.currentTimeMillis())
                     .build();
         }
 
-        static void currencyWrongPrice() {
-            Currency.builder()
+        static void wrongPriceUpdate() {
+            PriceUpdate.builder()
                     .symbol(SYMBOL)
                     .build();
         }

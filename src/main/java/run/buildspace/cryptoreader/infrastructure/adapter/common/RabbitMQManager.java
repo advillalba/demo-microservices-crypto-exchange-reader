@@ -53,11 +53,6 @@ public class RabbitMQManager {
     }
 
     @Bean
-    Binding bindingUnsubscription(Queue queueSubscription, TopicExchange exchange) {
-        return BindingBuilder.bind(queueSubscription).to(exchange).with(properties.unsubscribeRoutingBind());
-    }
-
-    @Bean
     Queue queueErrorCurrencyUpdate() {
         return QueueBuilder.durable(properties.currencyErrorUpdateQueue()).deadLetterExchange(properties.deadLetterExchange()).build();
 

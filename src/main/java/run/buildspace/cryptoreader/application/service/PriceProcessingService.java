@@ -2,7 +2,7 @@ package run.buildspace.cryptoreader.application.service;
 
 import run.buildspace.cryptoreader.application.port.in.ForPriceProcessing;
 import run.buildspace.cryptoreader.application.port.out.PriceEventPublisher;
-import run.buildspace.cryptoreader.domain.model.Currency;
+import run.buildspace.cryptoreader.domain.model.PriceUpdate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -18,8 +18,8 @@ public class PriceProcessingService implements ForPriceProcessing {
     }
 
     @Override
-    public void processPrice(Currency price) {
-        priceEventPublisher.publish(price);
+    public void processPrice(PriceUpdate priceUpdate) {
+        priceEventPublisher.publish(priceUpdate);
     }
 
     @Override

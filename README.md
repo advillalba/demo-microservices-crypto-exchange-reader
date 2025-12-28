@@ -7,13 +7,13 @@ publishes them to RabbitMQ. Built following **Hexagonal Architecture** principle
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│                        Infrastructure                            │
+│                        Infrastructure                           │
 │  ┌─────────────┐    ┌─────────────┐    ┌─────────────────────┐  │
 │  │   Binance   │    │  RabbitMQ   │    │     PostgreSQL      │  │
 │  │  WebSocket  │    │   Broker    │    │     Database        │  │
 │  └──────┬──────┘    └──────┬──────┘    └──────────┬──────────┘  │
-│         │                  │                      │              │
-│  ┌──────▼──────┐    ┌──────▼──────┐    ┌─────────▼──────────┐   │
+│         │                  │                      │             │
+│  ┌──────▼──────┐    ┌──────▼──────┐    ┌──────────▼─────────┐   │
 │  │   Binance   │    │  RabbitMQ   │    │   Subscription     │   │
 │  │  Listener   │    │  Publisher  │    │   Repository       │   │
 │  │  (Adapter)  │    │  (Adapter)  │    │   (Adapter)        │   │
@@ -21,11 +21,11 @@ publishes them to RabbitMQ. Built following **Hexagonal Architecture** principle
 └─────────┼──────────────────┼─────────────────────┼──────────────┘
           │                  │                     │
 ┌─────────▼──────────────────┼─────────────────────┼──────────────┐
-│                      Application                                 │
-│  ┌──────────────────┐    ┌─┴────────────────────┐│               │
-│  │ PriceProcessing  │    │   Subscription       ││               │
-│  │    Service       │────│      Service         │┘               │
-│  └──────────────────┘    └──────────────────────┘                │
+│                      Application                 |              │
+│  ┌──────────────────┐    ┌─┴────────────────────┐│              │
+│  │ PriceProcessing  │    │   Subscription       ││              │
+│  │    Service       │────│      Service         │┘              │
+│  └──────────────────┘    └──────────────────────┘               │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
@@ -63,11 +63,40 @@ publishes them to RabbitMQ. Built following **Hexagonal Architecture** principle
    curl http://localhost:8080/actuator/health
    ```
 
+### Environment Variables
+
+The application supports the following environment variables for configuration:
+
+| Variable      | Description              | Default  |
+|---------------|--------------------------|----------|
+| `DB_USERNAME` | PostgreSQL username      | `myuser` |
+| `DB_PASSWORD` | PostgreSQL password      | `secret` |
+
+Example:
+```bash
+export DB_USERNAME=myuser
+export DB_PASSWORD=mypassword
+./mvnw spring-boot:run
+```
+
 ### Running Tests
 
+**Unit tests only (fast):**
 ```bash
 ./mvnw test
 ```
+
+**Integration tests only (with Testcontainers):**
+```bash
+./mvnw test -Pintegration
+```
+
+**All tests:**
+```bash
+./mvnw test -Punit-tests,integration
+```
+
+> **Note:** Integration tests use Testcontainers for PostgreSQL, RabbitMQ, and MockWebServer for Binance WebSocket simulation. Tests run concurrently for faster execution.
 
 ## 📊 Observability
 
@@ -93,7 +122,7 @@ publishes them to RabbitMQ. Built following **Hexagonal Architecture** principle
 - **WebSocket:** Spring WebSocket + Tyrus Client
 - **Observability:** Micrometer + Prometheus
 - **Resilience:** Resilience4j
-- **Testing:** JUnit 5 + Mockito + Testcontainers
+- **Testing:** JUnit 5 + Mockito + Testcontainers + Awaitility + MockWebServer
 
 ## 📁 Project Structure
 
@@ -113,6 +142,28 @@ src/main/java/run/buildspace/cryptoreader/
     │   └── out/        # Driven adapters
     └── config/         # Configuration classes
 ```
+
+## 🎯 Domain Model
+
+### Key Entities
+
+- **`PriceUpdate`**: Represents a real-time price update from Binance
+  - `symbol`: Cryptocurrency symbol (e.g., "BTCUSDT")
+  - `price`: Current price
+  - `timestamp`: Event timestamp
+
+- **`Subscription`**: Represents a user's subscription to a cryptocurrency
+  - `symbol`: Cryptocurrency symbol
+  - `subscribe`: Boolean flag (true=subscribe, false=unsubscribe)
+
+### Test Coverage
+
+- **Unit Tests**: Test individual components in isolation (services, adapters)
+- **Integration Tests**: End-to-end tests with real infrastructure using Testcontainers
+  - Database persistence verification
+  - RabbitMQ message processing
+  - WebSocket connection simulation
+  - Concurrent test execution for performance
 
 ## 📝 License
 

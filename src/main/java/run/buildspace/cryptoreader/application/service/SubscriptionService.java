@@ -1,5 +1,6 @@
 package run.buildspace.cryptoreader.application.service;
 
+import org.apache.commons.lang3.BooleanUtils;
 import run.buildspace.cryptoreader.application.port.in.ForSubscriptionUpdate;
 import run.buildspace.cryptoreader.application.port.out.CryptoStreamSubscriber;
 import run.buildspace.cryptoreader.application.port.out.PriceSubscriptionRepository;
@@ -38,7 +39,7 @@ public class SubscriptionService implements ForSubscriptionUpdate {
             Subscription subscription = pendingSubscription.subscription();
             BiConsumer<String, Consumer<Boolean>> action = pendingSubscription.subscription().subscribe() ? cryptoStreamSubscriber::subscribe : cryptoStreamSubscriber::unsubscribe;
             action.accept(subscription.symbol(), success -> {
-                if (success) {
+                if (BooleanUtils.isTrue(success)) {
                     transactionTemplate.executeWithoutResult(status -> priceSubscriptionRepository.save(subscription));
                     pendingSubscription.onSuccess().run();
                 } else {
@@ -50,15 +51,13 @@ public class SubscriptionService implements ForSubscriptionUpdate {
 
     @Override
     public void reloadAllSubscriptions() {
-        priceSubscriptionRepository.findAll().forEach(it -> {
-            cryptoStreamSubscriber.subscribe(it, success -> {
-                if (success) {
-                    logger.info("Reloaded subscription of {}", it);
-                } else {
-                    logger.error("Error reloading subscription of {}", it);
-                }
-            });
-        });
+        priceSubscriptionRepository.findAll().forEach(it -> cryptoStreamSubscriber.subscribe(it, success -> {
+            if (BooleanUtils.isTrue(success)) {
+                logger.info("Reloaded subscription of {}", it);
+            } else {
+                logger.error("Error reloading subscription of {}", it);
+            }
+        }));
     }
 
 }

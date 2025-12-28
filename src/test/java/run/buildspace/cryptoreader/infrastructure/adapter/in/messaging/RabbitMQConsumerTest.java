@@ -103,7 +103,7 @@ class RabbitMQConsumerTest {
         private Mocks() {
         }
 
-        private static long DELIVERY_TAG = 1L;
+        private static final long DELIVERY_TAG = 1L;
 
         private static Subscription subscription(){
             return new PodamFactoryImpl().manufacturePojo(Subscription.class);

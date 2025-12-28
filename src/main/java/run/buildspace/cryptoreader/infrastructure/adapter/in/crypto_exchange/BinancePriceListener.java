@@ -1,12 +1,14 @@
 package run.buildspace.cryptoreader.infrastructure.adapter.in.crypto_exchange;
 
-import run.buildspace.cryptoreader.application.port.in.ForPriceProcessing;
-import run.buildspace.cryptoreader.infrastructure.adapter.common.BinanceWebSocketManager;
 import jakarta.annotation.PostConstruct;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import run.buildspace.cryptoreader.application.port.in.ForPriceProcessing;
+import run.buildspace.cryptoreader.domain.model.PriceUpdate;
+import run.buildspace.cryptoreader.infrastructure.adapter.common.BinanceWebSocketManager;
+import run.buildspace.cryptoreader.infrastructure.config.observability.Trace;
 
 @Component
 public class BinancePriceListener {
@@ -22,17 +24,21 @@ public class BinancePriceListener {
 
     @PostConstruct
     public void run() {
-        binanceWebSocketManager.getPrices().subscribe(
-                price -> {
-                    logger.info("Price received: {}", price);
-                    forPriceProcessing.processPrice(price);
-                },
-                error -> {
-                    logger.error("Error: {}", String.valueOf(error));
-                    forPriceProcessing.processError(String.valueOf(error));
-                },
+        binanceWebSocketManager.getPriceUpdates().subscribe(
+                price -> Trace.trace(this::processPrice, price),
+                error -> Trace.trace(this::processError, error),
                 () -> logger.info("Closed connection with Binance")
         );
+    }
+
+    private void processPrice(PriceUpdate priceUpdate) {
+        logger.info("Received price update: {}", priceUpdate);
+        forPriceProcessing.processPrice(priceUpdate);
+    }
+
+    private void processError(Throwable error) {
+        logger.error("Error: {}", error.getMessage());
+        forPriceProcessing.processError(error.getMessage());
     }
 
 

@@ -1,0 +1,27 @@
+spring:
+  docker:
+    compose:
+      enabled: false
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: true
+  datasource:
+    hikari:
+      maximum-pool-size: 5
+      connection-timeout: 5000
+      validation-timeout: 3000
+      max-lifetime: 60000
+      leak-detection-threshold: 30000
+
+binance:
+  retry-max-attemps: 2
+  retry-interval: 100
+  retry-interval-multiplier: 1
+  observability:
+    web-socket-status-gauge: test.binance.websocket.status
+    web-socket-status-description: "Test WebSocket connection status"
+    web-socket-silence-gauge: test.binance.websocket.silence
+    web-socket-silence-description: "Test time since last message"
+    web-socket-messages-processed-counter: test.binance.websocket.messages.processed
+    web-socket-messages-ignored-counter: test.binance.websocket.messages.ignored

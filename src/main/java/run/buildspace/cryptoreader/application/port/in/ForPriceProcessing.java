@@ -1,10 +1,10 @@
 package run.buildspace.cryptoreader.application.port.in;
 
-import run.buildspace.cryptoreader.domain.model.Currency;
+import run.buildspace.cryptoreader.domain.model.PriceUpdate;
 
 
 public interface ForPriceProcessing {
-    void processPrice(Currency price);
+    void processPrice(PriceUpdate priceUpdate);
 
     void processError(String message);
 }

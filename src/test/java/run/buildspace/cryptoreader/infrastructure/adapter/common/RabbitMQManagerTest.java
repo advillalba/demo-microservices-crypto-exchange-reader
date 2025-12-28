@@ -65,13 +65,6 @@ class RabbitMQManagerTest {
         assertEquals(rabbitMQProperties.subscriptionRoutingBind(), binding.getRoutingKey());
     }
 
-    @Test
-    void bindingUnsubscriptionTest() {
-        Binding binding = rabbitMQManager.bindingUnsubscription(rabbitMQManager.queueSubscription(), rabbitMQManager.exchange());
-        assertEquals(rabbitMQManager.exchange().getName(), binding.getExchange());
-        assertEquals(rabbitMQManager.queueSubscription().getName(), binding.getDestination());
-        assertEquals(rabbitMQProperties.unsubscribeRoutingBind(), binding.getRoutingKey());
-    }
 
     @Test
     void queueErrorCurrencyUpdateTest() {

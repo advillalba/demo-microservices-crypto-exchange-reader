@@ -1,7 +1,5 @@
 package run.buildspace.cryptoreader.infrastructure.adapter.common;
 
-import run.buildspace.cryptoreader.domain.exception.WSException;
-import run.buildspace.cryptoreader.infrastructure.config.BinanceWebSocketProperties;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import lombok.Getter;
@@ -20,6 +18,8 @@ import org.springframework.web.socket.WebSocketHttpHeaders;
 import org.springframework.web.socket.WebSocketSession;
 import org.springframework.web.socket.client.WebSocketClient;
 import org.springframework.web.socket.handler.TextWebSocketHandler;
+import run.buildspace.cryptoreader.domain.exception.WSException;
+import run.buildspace.cryptoreader.infrastructure.config.BinanceWebSocketProperties;
 
 import java.math.BigDecimal;
 import java.net.URI;
@@ -51,6 +51,7 @@ class BinanceWebSocketManagerTest {
     private final Mocks.WebSocketClientTest webSocketClient = new Mocks.WebSocketClientTest();
 
     private MeterRegistry meterRegistry;
+
     @BeforeEach
     void setUp() {
         properties = Mocks.properties();
@@ -78,7 +79,6 @@ class BinanceWebSocketManagerTest {
         // When / Then
         webSocketClient.close();
         assertEquals(0.0, meterRegistry.find(properties.observability().webSocketStatusGauge()).gauge().value());
-        ;
     }
 
     @Test
@@ -86,7 +86,7 @@ class BinanceWebSocketManagerTest {
 
         // Given
         CountDownLatch latch = new CountDownLatch(1);
-        binanceWebSocketManager.getPrices().subscribe(
+        binanceWebSocketManager.getPriceUpdates().subscribe(
                 price -> {
                     assertEquals(Mocks.SYMBOL, price.symbol());
                     assertEquals(0, Mocks.PRICE.compareTo(price.price()));
@@ -105,7 +105,7 @@ class BinanceWebSocketManagerTest {
     void handleConnectionMessageTest() throws InterruptedException {
         // Given
         CountDownLatch latch = new CountDownLatch(1);
-        binanceWebSocketManager.getPrices().subscribe(price -> latch.countDown());
+        binanceWebSocketManager.getPriceUpdates().subscribe(price -> latch.countDown());
 
         // When
         webSocketClient.handleMessage(Mocks.connectionMessage());
@@ -117,7 +117,7 @@ class BinanceWebSocketManagerTest {
     @Test
     void handleWrongMessageTest() {
         // Given
-        binanceWebSocketManager.getPrices().subscribe(
+        binanceWebSocketManager.getPriceUpdates().subscribe(
                 price -> fail("No price should be received"),
                 error -> {
                     // Then
@@ -130,7 +130,7 @@ class BinanceWebSocketManagerTest {
     }
 
     @Test
-    void exceptionHandleTest() throws InterruptedException, ExecutionException {
+    void interruptExceptionHandleTest() throws InterruptedException, ExecutionException {
         // Given
         WebSocketClient mockSocketClient = Mockito.mock(WebSocketClient.class);
         CompletableFuture<WebSocketSession> mockFuture = Mockito.mock(CompletableFuture.class);
@@ -143,8 +143,9 @@ class BinanceWebSocketManagerTest {
 
         // When / Then
         WSException wse = assertThrows(WSException.class, () -> binanceWebSocketManager.connect());
-        assertEquals("Error connecting to Binance: Test exception", wse.getMessage());
+        assertEquals("Error connecting to Binance - interrupted: Test exception", wse.getMessage());
     }
+
 
     private static class Mocks {
         private Mocks() {
@@ -217,7 +218,8 @@ class BinanceWebSocketManagerTest {
                     throw new RuntimeException(e);
                 }
             }
-            public void close(){
+
+            public void close() {
                 try {
                     webSocketHandler.afterConnectionClosed(session, CloseStatus.NORMAL);
                 } catch (Exception e) {

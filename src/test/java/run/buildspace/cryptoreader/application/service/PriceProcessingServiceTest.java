@@ -1,7 +1,5 @@
 package run.buildspace.cryptoreader.application.service;
 
-import run.buildspace.cryptoreader.application.port.out.PriceEventPublisher;
-import run.buildspace.cryptoreader.domain.model.Currency;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.parallel.Execution;
@@ -9,6 +7,8 @@ import org.junit.jupiter.api.parallel.ExecutionMode;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import run.buildspace.cryptoreader.application.port.out.PriceEventPublisher;
+import run.buildspace.cryptoreader.domain.model.PriceUpdate;
 
 import java.math.BigDecimal;
 
@@ -27,9 +27,9 @@ class PriceProcessingServiceTest {
 
     @Test
     void processPriceTest() {
-        Currency currency = Mocks.currency();
-        priceProcessingService.processPrice(currency);
-        then(priceEventPublisher).should(times(1)).publish(currency);
+        PriceUpdate priceUpdate = Mocks.priceUpdate();
+        priceProcessingService.processPrice(priceUpdate);
+        then(priceEventPublisher).should(times(1)).publish(priceUpdate);
     }
 
     @Test
@@ -48,8 +48,8 @@ class PriceProcessingServiceTest {
         static final BigDecimal PRICE = BigDecimal.valueOf(30000);
         static final String ERROR_MESSAGE = "Error processing price";
 
-        static Currency currency() {
-            return Currency.builder().symbol(SYMBOL).price(PRICE).timestamp(System.currentTimeMillis()).build();
+        static PriceUpdate priceUpdate() {
+            return PriceUpdate.builder().symbol(SYMBOL).price(PRICE).timestamp(System.currentTimeMillis()).build();
         }
     }
 }

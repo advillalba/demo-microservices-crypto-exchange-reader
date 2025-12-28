@@ -9,8 +9,8 @@ import java.io.Serializable;
 import java.math.BigDecimal;
 
 @Builder
-public record Currency(String symbol, BigDecimal price, Long timestamp) implements Serializable {
-    public Currency {
+public record PriceUpdate(String symbol, BigDecimal price, Long timestamp) implements Serializable {
+    public PriceUpdate {
         if (StringUtils.isBlank(symbol)) {
             throw new InvalidSymbolException("Symbol cannot be empty");
         }
