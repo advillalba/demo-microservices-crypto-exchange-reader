@@ -27,5 +27,5 @@ jobs:
         distribution: 'temurin'
         cache: maven
     - name: Build with Maven
-      run:  mvn -B verify -P all-tests org.sonarsource.scanner.maven:sonar-maven-plugin:sonar -Dsonar.organization="$GITHUB_REPOSITORY-$GITHUB_REF" -Dsonar.projectKey=demo:crypto-exchange-reader
+      run:  mvn -B verify -P all-tests org.sonarsource.scanner.maven:sonar-maven-plugin:sonar -Dsonar.organization=buildspace -Dsonar.projectKey="$GITHUB_REPOSITORY-$GITHUB_REF"
           
