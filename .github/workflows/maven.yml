@@ -27,5 +27,5 @@ jobs:
         distribution: 'temurin'
         cache: maven
     - name: Build with Maven
-      run:  mvn -B verify -P all-tests org.sonarsource.scanner.maven:sonar-maven-plugin:sonar -Dsonar.organization=buildspace -Dsonar.projectKey=crypto-exchange-reader -Dsonar.token=${{ secrets.SONAR_TOKEN }}
+      run:  mvn -B verify -P all-tests org.sonarsource.scanner.maven:sonar-maven-plugin:sonar -Dsonar.host.url=https://sonarcloud.io -Dsonar.organization=buildspace -Dsonar.projectKey="demo:$GITHUB_REPOSITORY-$GITHUB_REF" -Dsonar.token=${{ secrets.SONAR_TOKEN }}
           
