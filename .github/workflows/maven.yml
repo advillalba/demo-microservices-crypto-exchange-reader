@@ -13,12 +13,11 @@ on:
     branches: [ "main" ]
   pull_request:
     branches: [ "main" ]
-
+permissions:
+    contents: write 
 jobs:
   build:
     runs-on: ubuntu-latest
-    permissions:
-      contents: write 
     steps:
     - name: Cache local Maven repository
       uses: actions/cache@v4
