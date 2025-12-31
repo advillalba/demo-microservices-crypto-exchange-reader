@@ -7,6 +7,7 @@ RUN java -Djarmode=layertools -jar application.jar extract
 
 # Stage 2: Imagen final
 FROM registry.access.redhat.com/ubi9/openjdk-21:1.23
+LABEL org.opencontainers.image.source https://github.com/advillalba/demo-microservices-crypto-exchange-reader
 WORKDIR /application
 # Copiamos las capas extraídas del builder
 COPY --from=builder /application/dependencies/ ./
