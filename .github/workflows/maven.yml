@@ -58,7 +58,7 @@ jobs:
       id: meta
       uses: docker/metadata-action@v5
       with:
-        images: ${{ env.REGISTRY }}/buildspace-${{ env.PROJECT_ARTIFACTID }}
+        images: ${{ env.REGISTRY }}/buildspace-run/${{ env.PROJECT_ARTIFACTID }}
         tags: |
           type=ref,event=branch
           type=ref,event=pr
