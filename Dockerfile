@@ -1,4 +1,4 @@
-FROM registry.access.redhat.com/ubi9/openjdk-21:1.23 AS build
+FROM registry.access.redhat.com/ubi9/openjdk-21:1.23 AS builder
 WORKDIR /application
 ARG JAR_FILE=target/*.jar
 COPY ${JAR_FILE} application.jar
