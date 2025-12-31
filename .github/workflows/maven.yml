@@ -14,11 +14,10 @@ on:
   pull_request:
     branches: [ "main" ]
 permissions:
-  contents: write
-  packages: write
+    contents: write 
+    packages: write
 env:
   REGISTRY: ghcr.io
-  REPO_NAME: ${{ github.repository }}
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -38,11 +37,10 @@ jobs:
     - name: Build with Maven
       env:
         SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-      run:  mvn -B verify -P all-tests org.sonarsource.scanner.maven:sonar-maven-plugin:sonar -Dsonar.host.url=https://sonarcloud.io -Dsonar.organization=buildspace -Dsonar.projectKey=$PROJECT_ARTIFACTID
+      run:  mvn -B verify -P all-tests org.sonarsource.scanner.maven:sonar-maven-plugin:sonar -Dsonar.host.url=https://sonarcloud.io -Dsonar.organization=buildspace -Dsonar.projectKey=demo:$PROJECT_ARTIFACTID
     - name: Update dependency graph
       if: github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository)
       uses: advanced-security/maven-dependency-submission-action@571e99aab1055c2e71a1e2309b9691de18d6b7d6
-      
     - name: Set up QEMU
       uses: docker/setup-qemu-action@v3
 
@@ -60,7 +58,7 @@ jobs:
       id: meta
       uses: docker/metadata-action@v5
       with:
-        images: ${{ env.REGISTRY }}/${{ env.PROJECT_ARTIFACTID }}
+        images: ${{ env.REGISTRY }}/buildspace-${{ env.PROJECT_ARTIFACTID }}
         tags: |
           type=ref,event=branch
           type=ref,event=pr
