@@ -1,3 +1,5 @@
+[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=buildspace-run_demo-microservices-crypto-exchange-reader&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=buildspace-run_demo-microservices-crypto-exchange-reader)
+
 # Crypto Exchange Reader Microservice
 
 A Spring Boot microservice that connects to Binance WebSocket API to receive real-time cryptocurrency prices and
