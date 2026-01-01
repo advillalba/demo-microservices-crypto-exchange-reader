@@ -31,7 +31,11 @@ jobs:
         cache: maven
         fetch-depth: 0
     - name: Build with Maven
-      run:  mvn -B verify -P all-tests
+      run:  mvn -B verify
+    - name: Executing Unit Tests
+      run:  mvn -B test
+    - name: Executing Smoke Tests
+      run: mvn -B -Psmoke-tests
     - name: SonarCloud Scan
       env:
         SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
