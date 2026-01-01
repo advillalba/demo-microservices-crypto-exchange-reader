@@ -21,3 +21,4 @@ env:
 jobs:
   call-maven-microservices-workflow:
     uses: buildspace-run/maven-workflows/.github/workflows/maven_microservice.yml@f770d2e561da72d6abe65a0d58797d57fdf47833
+    secrets: inherit
