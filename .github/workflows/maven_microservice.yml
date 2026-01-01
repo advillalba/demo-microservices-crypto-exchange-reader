@@ -20,4 +20,4 @@ env:
   REGISTRY: ghcr.io
 jobs:
   call-maven-microservices-workflow:
-    uses: buildspace-run/maven-workflows/.github/workflows/maven_microservice.yml@0de66537e2465365a18bc1a4b754e0ae474525b8
+    uses: buildspace-run/maven-workflows/.github/workflows/maven_microservice.yml@f770d2e561da72d6abe65a0d58797d57fdf47833
