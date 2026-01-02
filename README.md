@@ -2,8 +2,7 @@
 
 # Crypto Exchange Reader Microservice
 
-A Spring Boot microservice that connects to Binance WebSocket API to receive real-time cryptocurrency prices and
-publishes them to RabbitMQ. Built following **Hexagonal Architecture** principles.
+A Spring Boot microservice that connects to **Binance WebSocket API** to receive real-time cryptocurrency price updates and publishes them to **RabbitMQ**. It also handles dynamic subscription management with persistence in **PostgreSQL**. Built following **Hexagonal Architecture** principles.
 
 ## 🏗️ Architecture
 
@@ -33,12 +32,13 @@ publishes them to RabbitMQ. Built following **Hexagonal Architecture** principle
 
 ## ✨ Features
 
-- **Real-time price streaming** from Binance via WebSocket
-- **Dynamic subscription management** via RabbitMQ commands
-- **Subscription persistence** in PostgreSQL
-- **Observability** with Micrometer/Prometheus metrics
-- **Resilience** with retry mechanisms (Resilience4j)
-- **Hexagonal Architecture** for clean separation of concerns
+- **Real-time price streaming** - Connects to Binance public streams
+- **Dynamic subscription management** - Add/remove symbols at runtime
+- **Resilient connectivity** - Automatic reconnection strategies with backoff
+- **Message reliability** - Dead Letter Queues (DLQ) for failed messages
+- **Persistence** - Stores active subscriptions in PostgreSQL
+- **Observability** - Custom metrics for WebSocket health and message rates
+- **Hexagonal Architecture** - Clean separation of domain and infrastructure
 
 ## 🚀 Getting Started
 
@@ -47,74 +47,100 @@ publishes them to RabbitMQ. Built following **Hexagonal Architecture** principle
 - Java 21+
 - Docker & Docker Compose
 - Maven 3.9+
+- PostgreSQL 15+
+- RabbitMQ 3.12+
 
 ### Running Locally
 
-1. **Start infrastructure services:**
+1. **Run the application:**
    ```bash
-   docker-compose up -d
+   mvn spring-boot:run
    ```
-
-2. **Run the application:**
-   ```bash
-   ./mvnw spring-boot:run
-   ```
-
-3. **Check health:**
+   
+   Spring Boot will automatically:
+   - Detect and start Docker Compose services (`compose.yml`)
+   - Initialize PostgreSQL and RabbitMQ
+   - Connect to Binance WebSocket
+   - Start processing default subscriptions
+   
+2. **Check health:**
    ```bash
    curl http://localhost:8080/actuator/health
    ```
+
+**Access Services:**
+- RabbitMQ Management UI: http://localhost:15672 (credentials: guest/guest)
+- PostgreSQL: localhost:5432 (credentials: myuser/secret)
 
 ### Environment Variables
 
 The application supports the following environment variables for configuration:
 
-| Variable      | Description              | Default  |
-|---------------|--------------------------|----------|
-| `DB_USERNAME` | PostgreSQL username      | `myuser` |
-| `DB_PASSWORD` | PostgreSQL password      | `secret` |
+| Variable            | Description                    | Default     |
+|---------------------|--------------------------------|-------------|
+| `DB_USERNAME`       | PostgreSQL username            | `myuser`    |
+| `DB_PASSWORD`       | PostgreSQL password            | `secret`    |
+| `RABBITMQ_HOST`     | RabbitMQ broker hostname       | `localhost` |
+| `RABBITMQ_PORT`     | RabbitMQ AMQP port             | `5672`      |
+| `RABBITMQ_USER`     | RabbitMQ username              | `guest`     |
+| `RABBITMQ_PASSWORD` | RabbitMQ password              | `guest`     |
+| `RABBITMQ_VHOST`    | RabbitMQ virtual host          | `/`         |
 
 Example:
 ```bash
 export DB_USERNAME=myuser
 export DB_PASSWORD=mypassword
-./mvnw spring-boot:run
+export RABBITMQ_HOST=rabbitmq.example.com
+mvn spring-boot:run
 ```
 
 ### Running Tests
 
 **Unit tests only (fast):**
 ```bash
-./mvnw test
+mvn test
 ```
 
-**Integration tests only (with Testcontainers):**
+**Integration tests only:**
 ```bash
-./mvnw test -Pintegration
+mvn test -Psmoke-tests
 ```
 
-**All tests:**
-```bash
-./mvnw test -Punit-tests,integration
-```
-
-> **Note:** Integration tests use Testcontainers for PostgreSQL, RabbitMQ, and MockWebServer for Binance WebSocket simulation. Tests run concurrently for faster execution.
+> **Note:** Integration tests use **Testcontainers** to spin up real instances of PostgreSQL and RabbitMQ, and **MockWebServer** to simulate the Binance WebSocket API.
 
 ## 📊 Observability
 
 ### Available Metrics
 
+Spring Boot Actuator and Micrometer expose the following custom metrics:
+
 | Metric                         | Type    | Description                                |
 |--------------------------------|---------|--------------------------------------------|
 | `binance.websocket.status`     | Gauge   | WebSocket connection status (1=UP, 0=DOWN) |
 | `binance.websocket.silence`    | Gauge   | Time since last message (seconds)          |
-| `websocket.messages.processed` | Counter | Total messages processed                   |
-| `subscriptions.active`         | Gauge   | Active subscriptions in database           |
+| `binance.websocket.messages.processed` | Counter | Total messages processed successfully |
+| `binance.websocket.messages.ignored`   | Counter | Messages ignored (e.g. keep-alives)   |
+| `subscriptions.active`         | Gauge   | Number of active cryptocurrency subscriptions |
 
 ### Endpoints
 
 - **Health:** `GET /actuator/health`
+- **Metrics:** `GET /actuator/metrics`
 - **Prometheus:** `GET /actuator/prometheus`
+
+### Monitoring Best Practices
+
+**WebSocket Health:**
+```promql
+# Alert if WebSocket is disconnected for more than 1 minute
+avg_over_time(binance_websocket_status[1m]) < 1
+```
+
+**Data Stagnation:**
+```promql
+# Alert if no messages received for 30 seconds
+binance_websocket_silence > 30
+```
 
 ## 🛠️ Technology Stack
 
@@ -123,50 +149,71 @@ export DB_PASSWORD=mypassword
 - **Database:** PostgreSQL with Spring Data JPA
 - **WebSocket:** Spring WebSocket + Tyrus Client
 - **Observability:** Micrometer + Prometheus
-- **Resilience:** Resilience4j
+- **Resilience:** Resilience4j (Retry/Circuit Breaker)
 - **Testing:** JUnit 5 + Mockito + Testcontainers + Awaitility + MockWebServer
+- **Build Tool:** Maven 3.9+
 
 ## 📁 Project Structure
 
 ```
-src/main/java/run/buildspace/cryptoreader/
+src/main/java/run/buildspace/crypto/price/reader/
 ├── domain/
-│   ├── model/          # Domain entities
+│   ├── model/          # Domain entities (PriceUpdate, Subscription)
 │   └── exception/      # Domain exceptions
 ├── application/
 │   ├── port/
-│   │   ├── in/         # Input ports (use cases)
-│   │   └── out/        # Output ports (driven)
-│   └── service/        # Application services
+│   │   ├── in/         # Input ports (Use Cases)
+│   │   └── out/        # Output ports (Repositories, Publishers)
+│   └── service/        # Application services (Business Logic)
 └── infrastructure/
-    ├── adapter/
-    │   ├── in/         # Driving adapters
-    │   └── out/        # Driven adapters
-    └── config/         # Configuration classes
+     ├── adapter/
+     │   ├── in/         # Driving adapters (WebSocket Listener)
+     │   └── out/        # Driven adapters (RabbitMQ Publisher, Postgres Repo)
+     └── config/         # Configuration classes
 ```
 
 ## 🎯 Domain Model
 
 ### Key Entities
 
-- **`PriceUpdate`**: Represents a real-time price update from Binance
-  - `symbol`: Cryptocurrency symbol (e.g., "BTCUSDT")
-  - `price`: Current price
-  - `timestamp`: Event timestamp
+- **`PriceUpdate`**: Represents a real-time price update
+  - `symbol`: Cryptocurrency pair (e.g., "BTC")
+  - `price`: Current trading price
+  - `timestamp`: Event occurrence time
 
-- **`Subscription`**: Represents a user's subscription to a cryptocurrency
-  - `symbol`: Cryptocurrency symbol
-  - `subscribe`: Boolean flag (true=subscribe, false=unsubscribe)
+- **`Subscription`**: Represents a tracked asset
+  - `symbol`: Unique identifier for the cryptocurrency pair
+  - `subscribe`: Boolean flag indicating subscription state (true = subscribed)
 
-### Test Coverage
+## ⚡ Resilience & Reliability
 
-- **Unit Tests**: Test individual components in isolation (services, adapters)
-- **Integration Tests**: End-to-end tests with real infrastructure using Testcontainers
-  - Database persistence verification
-  - RabbitMQ message processing
-  - WebSocket connection simulation
-  - Concurrent test execution for performance
+### Automatic Reconnection
 
-## 📝 License
+The service is designed to handle network instability:
+1. **Connection Loss**: Detects WebSocket closure immediately.
+2. **Backoff Strategy**: Attempts reconnection with exponential backoff (starting at 500ms).
+3. **State Recovery**: Re-subscribes to all active currencies upon successful reconnection.
 
-This project is for educational/demo purposes.
+### Error Handling
+
+- **Invalid Messages**: Malformed JSON or unknown events are logged and ignored to prevent stream interruption.
+- **Publishing Failures**: If RabbitMQ is down, messages may be dropped to prevent memory leaks (dependent on configuration), but critical subscription events are retried.
+- **Dead Letter Queue (DLQ)**: Failed messages are routed to `dead-letter-queue` for manual inspection.
+
+## 🔍 Troubleshooting
+
+- **No data received?** Check that subscriptions exist in the database.
+- **Connection refused?** Verify Docker containers are running with `docker ps`.
+
+
+## 🤝 Integration with Consumer
+
+This producer feeds data to the **Crypto Price Persister** (consumer) microservice:
+
+1. **Producer** connects to Binance and forwards `PriceUpdate` events to RabbitMQ.
+2. **Consumer** reads queues and stores history in PostgreSQL.
+
+**Data Flow:**
+```
+Binance API (WS) → [Producer] → RabbitMQ Exchange → [Consumer] → DB
+```
